@@ -1,6 +1,6 @@
 {
   "name": "agreement-system",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Lightweight convergence layer between product (BMAD), implementation (Spec Kit), and code. One feature = one Agreement = one explicit promise.",
   "bin": {
