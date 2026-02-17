@@ -51,6 +51,7 @@ references:
   bmad: [] # e.g. [".bmad_output/planning-artifacts/prd.md"]
   speckit: [] # e.g. ["specs/###-feature-name/spec.md"]
   code: [] # e.g. ["src/api/resource.ts"]
+  adr: [] # e.g. [".adr/global/20260217-use-typescript.md"]
 
 # ── Drift Detection ──────────────────────────────────
 # Paths to monitor for changes that may impact this agreement

@@ -98,19 +98,47 @@ For each path in `watched_paths.code[]`:
 - If using diff mode: check if any watched file was modified
 - Flag: deleted watched paths, modified watched files
 
-### 6. Classify findings
+### 6. Check ADR constraints
+
+If `references.adr[]` is non-empty and `.adr/` exists:
+
+a. For each referenced ADR path, load the file and parse:
+   - `status` from frontmatter — skip if superseded or deprecated (those are `/agreement.sync` concerns)
+   - **Decision Outcome** section — this is the architectural constraint to verify
+
+b. For each active ADR's Decision Outcome, check the codebase for violations:
+
+   - **Technology/framework constraints** (e.g., "Use Express over Fastify"):
+     Scan `package.json` dependencies and import statements in `watched_paths.code[]` for contradicting libraries/frameworks.
+
+   - **Pattern constraints** (e.g., "Repository pattern for data access"):
+     Scan code files in scope for anti-patterns described in the ADR's Negative Consequences or explicitly rejected options.
+
+   - **Convention constraints** (e.g., "All API responses use standard envelope format"):
+     Spot-check endpoint handlers in scope for conformance to the described convention.
+
+   - **Scope**: Only check files within the ADR's `scope.applies_to` globs intersected with the Agreement's `watched_paths.code[]`. Do NOT scan the entire codebase.
+
+c. For each violation found, flag with:
+   - The ADR path and title
+   - The constraint from Decision Outcome
+   - The violating code file and evidence
+   - Whether the violation is clear-cut or ambiguous
+
+### 7. Classify findings
 
 Each finding gets a classification:
 
 | Type | Breaking? | Description |
 |------|-----------|-------------|
 | `BREAKING` | Yes | Interface removed or incompatibly changed |
+| `ADR_VIOLATION` | Yes | Code contradicts an architectural decision (wrong framework, pattern, convention) |
 | `DEGRADATION` | Possibly | Non-functional constraint violated |
 | `DRIFT` | No | Code evolved beyond Agreement scope |
 | `ORPHAN` | No | Watched path no longer exists |
 | `UNTESTED` | No | Acceptance criterion has no corresponding test |
 
-### 7. Present report
+### 8. Present report
 
 ```markdown
 ## Agreement Check: {{feature_id}}
@@ -120,6 +148,7 @@ Each finding gets a classification:
 
 ### Summary
 - Breaking changes: N
+- ADR violations: N
 - Degradations: N
 - Drift: N
 - Orphans: N
@@ -129,6 +158,12 @@ Each finding gets a classification:
 | # | Interface | Type | Description | Agreement line |
 |---|-----------|------|-------------|----------------|
 | 1 | POST /api/users | api | Endpoint removed | interfaces[0] |
+
+### ADR Violations (action required)
+
+| # | ADR | Constraint | Violation | File |
+|---|-----|-----------|-----------|------|
+| 1 | .adr/global/20260115-use-express.md | Use Express over Fastify | Imports fastify in route handler | src/api/server.ts |
 
 ### Degradations (review recommended)
 
@@ -144,12 +179,12 @@ Each finding gets a classification:
 
 ### Verdict
 
-**[PASS]** No breaking changes detected.
+**[PASS]** No breaking changes or ADR violations detected.
 or
-**[FAIL]** N breaking changes require Agreement update before merge.
+**[FAIL]** N breaking changes + M ADR violations require action before merge.
 ```
 
-### 8. Write check report (FAIL only)
+### 9. Write check report (FAIL only)
 
 If the verdict is FAIL, write the full report to `.agreements/{{feature_id}}/check-report.md`.
 
@@ -179,31 +214,38 @@ The file MUST include ALL findings with enough detail for `/agreement.doctor` to
 ```
 
 Each finding MUST include:
-- The severity tag: `[BREAKING]`, `[DEGRADATION]`, `[DRIFT]`, `[ORPHAN]`, `[UNTESTED]`
-- What the Agreement/contract says (the expected behavior)
+- The severity tag: `[BREAKING]`, `[ADR_VIOLATION]`, `[DEGRADATION]`, `[DRIFT]`, `[ORPHAN]`, `[UNTESTED]`
+- What the Agreement/contract/ADR says (the expected behavior)
 - What the code does (the actual behavior)
 - The exact file path to modify
-- The contract file path that serves as source of truth
+- The source of truth reference (contract file path for BREAKING, ADR path for ADR_VIOLATION)
 
-### 9. Recommend actions
+For `[ADR_VIOLATION]` findings specifically:
+- **ADR**: path to the ADR file
+- **Decision Outcome**: the exact constraint from the ADR
+- **Code does**: the violating code with file path
+- **Remediation**: what the code should do to conform
+
+### 10. Recommend actions
 
 If FAIL:
 ```
 Check report written to: .agreements/{{feature_id}}/check-report.md
 
-If the contract is the source of truth (fix code):
+If the contract/ADR is the source of truth (fix code):
   /agreement.doctor {{feature_id}}  → generates corrective tasks in tasks.md
   /speckit.implement                → applies the fixes
   /agreement.check {{feature_id}}   → re-verify → PASS
 
-If the code is the source of truth (update agreement):
+If the code is the source of truth (update agreement/ADR):
   /agreement.sync {{feature_id}}    → update the agreement to match code
+  /adr.supersede <adr-file>         → supersede the ADR if the decision changed
   /agreement.check {{feature_id}}   → re-verify → PASS
 ```
 
 If PASS:
 ```
-Agreement is aligned with code. No action needed.
+Agreement is aligned with code and ADR constraints. No action needed.
 ```
 
 ## Rules

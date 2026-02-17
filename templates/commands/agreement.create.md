@@ -67,10 +67,14 @@ b. Check if an Agreement already exists at `.agreements/{{feature_id}}/agreement
 
 ### 2. Detect existing artifacts
 
-Scan for existing BMAD and Spec Kit artifacts related to this feature:
+Scan for existing BMAD, Spec Kit, and ADR artifacts related to this feature:
 
 - **BMAD**: If `bmad_artifacts_dir` is not null, check `{{bmad_artifacts_dir}}/` for PRD, architecture, stories that mention the feature.
 - **Spec Kit**: Check `{{speckit_specs_dir}}/{{feature_id}}/` for spec.md, plan.md, tasks.md
+- **ADR**: If `.adr/` exists, find ADRs that apply to this feature's scope:
+  - Always include all global ADRs (`.adr/global/`)
+  - For domain/local ADRs, match `scope.applies_to` globs against the feature's code paths (from Spec Kit artifacts or `$ARGUMENTS`)
+  - Only include active ADRs (status: proposed or accepted)
 - Report what was found (may be nothing — that's fine)
 
 ### 3. Create the Agreement
@@ -104,6 +108,7 @@ h. Fill `references`:
    - `bmad`: paths to any BMAD artifacts found
    - `speckit`: paths to any Spec Kit artifacts found
    - `code`: leave empty unless code already exists
+   - `adr`: paths to active ADRs that apply to this feature (found in step 2)
 
 i. Fill `watched_paths`:
    - `bmad`: BMAD artifact paths to monitor
@@ -144,6 +149,7 @@ Status: draft
 Artifacts detected:
   BMAD:    [list or "none"]
   SpecKit: [list or "none"]
+  ADR:     [list or "none"]
   Code:    [list or "none"]
 
 Next steps:

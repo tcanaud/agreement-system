@@ -73,7 +73,21 @@ c. For each Spec Kit artifact found, extract:
    - Acceptance criteria (from spec.md)
    - Implementation decisions that affect the promise
 
-### 5. Scan code (lightweight)
+### 5. Scan ADRs
+
+a. Check paths listed in `references.adr[]` — for each referenced ADR:
+   - Verify the file still exists
+   - Parse frontmatter and check `status`
+   - If status is "superseded by ..." → flag as drift (the superseding ADR may change constraints)
+   - If status is "deprecated" → flag as drift (constraint may no longer apply)
+
+b. If `.adr/` exists, scan for NEW ADRs that apply to this feature but are not yet referenced:
+   - Include all global ADRs from `.adr/global/`
+   - For domain/local ADRs, match `scope.applies_to` globs against the Agreement's `watched_paths.code[]`
+   - Only consider active ADRs (status: proposed or accepted)
+   - If a matching ADR is found that is NOT in `references.adr[]`, flag as coverage gap
+
+### 6. Scan code (lightweight)
 
 a. Check paths listed in `watched_paths.code[]`
 b. If code paths exist, look for:
@@ -83,9 +97,9 @@ b. If code paths exist, look for:
    - Exported interfaces/types
 c. Do NOT perform deep code analysis — just surface-level interface detection
 
-### 6. Detect drift
+### 7. Detect drift
 
-Compare current Agreement content against what was found in steps 3-5.
+Compare current Agreement content against what was found in steps 3-6.
 
 Classify each difference:
 
@@ -93,12 +107,15 @@ Classify each difference:
 |----------|----------|-------------|
 | **Intent drift** | HIGH | Product intent in BMAD differs from Agreement |
 | **Interface change** | HIGH | API/schema/event changed in code or Spec Kit |
+| **ADR superseded** | HIGH | A referenced ADR was superseded — the new ADR may impose different constraints |
 | **Criteria mismatch** | MEDIUM | Acceptance criteria differ between sources |
 | **New constraint** | MEDIUM | Constraint added in one layer but not Agreement |
+| **ADR deprecated** | MEDIUM | A referenced ADR is deprecated — constraint may no longer apply |
 | **Reference stale** | LOW | Referenced file moved, renamed, or deleted |
 | **Coverage gap** | LOW | New artifact exists but isn't referenced |
+| **ADR coverage gap** | LOW | Active ADR applies to this feature's scope but is not in references.adr |
 
-### 7. Present findings
+### 8. Present findings
 
 Display a drift report:
 
@@ -122,7 +139,7 @@ Display a drift report:
 
 **If no drift detected**: Report "Agreement is in sync" and stop.
 
-### 8. Propose updates
+### 9. Propose updates
 
 For each finding, propose a specific YAML change to the Agreement:
 
@@ -139,7 +156,7 @@ intent: |
 **Reason**: PRD updated on YYYY-MM-DD with new scope
 ```
 
-### 9. Apply updates (with confirmation)
+### 10. Apply updates (with confirmation)
 
 - Present ALL proposed changes before applying any
 - Ask user: "Apply all / Select specific / Skip"
@@ -148,7 +165,7 @@ intent: |
 - Update the `updated` field to today's date
 - Update `.agreements/index.yaml` with new `updated` date
 
-### 10. Report
+### 11. Report
 
 ```
 Sync complete: {{feature_id}}
@@ -160,7 +177,7 @@ Sync complete: {{feature_id}}
 ## Rules
 
 - NEVER apply changes without user confirmation.
-- NEVER modify BMAD or Spec Kit artifacts — only the Agreement.
+- NEVER modify BMAD, Spec Kit, or ADR artifacts — only the Agreement.
 - Keep the Agreement short — summarize, don't duplicate.
 - If drift is detected but ambiguous, ask the user to clarify intent.
 - Severity HIGH findings should be addressed before continuing development.
