@@ -54,7 +54,7 @@ b. Check if an Agreement already exists at `.agreements/{{feature_id}}/agreement
 
 Scan for existing BMAD and Spec Kit artifacts related to this feature:
 
-- **BMAD**: Check `.bmad_output/planning-artifacts/` for PRD, architecture, stories that mention the feature
+- **BMAD**: Find the BMAD output folder by reading `_bmad/core/config.yaml` or `.bmad/core/config.yaml` → `output_folder` (default: `.bmad_output`). Check `{{output_folder}}/planning-artifacts/` for PRD, architecture, stories that mention the feature.
 - **Spec Kit**: Check `specs/{{feature_id}}/` for spec.md, plan.md, tasks.md
 - Report what was found (may be nothing — that's fine)
 
@@ -67,7 +67,7 @@ b. Fill in the identity section:
    - `title`: from user description or extracted from existing artifacts
    - `status`: "draft"
    - `created` / `updated`: today's date (YYYY-MM-DD)
-   - `owner`: from `_bmad/core/config.yaml` → `user_name`
+   - `owner`: from BMAD config (`_bmad/core/config.yaml` or `.bmad/core/config.yaml`) → `user_name`. If no BMAD, use `git config user.name`. If neither, ask.
 
 c. Fill in the product intent:
 

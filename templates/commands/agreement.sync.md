@@ -42,7 +42,7 @@ Read `.agreements/{{feature_id}}/agreement.yaml` and parse all sections.
 ### 3. Scan BMAD artifacts
 
 a. Check paths listed in `references.bmad[]`
-b. Also scan `.bmad_output/planning-artifacts/` for any file mentioning the feature_id or title
+b. Also scan the BMAD output folder (find via `_bmad/core/config.yaml` or `.bmad/core/config.yaml` → `output_folder`, default: `.bmad_output`) for planning artifacts mentioning the feature_id or title
 c. For each BMAD artifact found, extract:
    - Product intent / vision statements
    - User outcomes / goals

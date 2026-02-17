@@ -6,13 +6,20 @@ import { createInterface } from "node:readline";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES = join(__dirname, "..", "templates");
 
+function detectBmadDir(projectRoot) {
+  if (existsSync(join(projectRoot, "_bmad"))) return "_bmad";
+  if (existsSync(join(projectRoot, ".bmad"))) return ".bmad";
+  return null;
+}
+
 function detect(projectRoot) {
-  const hasBmad = existsSync(join(projectRoot, "_bmad"));
+  const bmadDir = detectBmadDir(projectRoot);
+  const hasBmad = bmadDir !== null;
   const hasSpeckit = existsSync(join(projectRoot, ".specify"));
   const hasClaudeCommands = existsSync(join(projectRoot, ".claude", "commands"));
   const hasAgreements = existsSync(join(projectRoot, ".agreements"));
 
-  return { hasBmad, hasSpeckit, hasClaudeCommands, hasAgreements };
+  return { hasBmad, bmadDir, hasSpeckit, hasClaudeCommands, hasAgreements };
 }
 
 function copyTemplate(src, dest) {
@@ -45,7 +52,7 @@ export async function install(flags = []) {
   const env = detect(projectRoot);
 
   console.log("  Environment detected:");
-  console.log(`    BMAD:           ${env.hasBmad ? "yes" : "no"}`);
+  console.log(`    BMAD:           ${env.hasBmad ? `yes (${env.bmadDir}/)` : "no"}`);
   console.log(`    Spec Kit:       ${env.hasSpeckit ? "yes" : "no"}`);
   console.log(`    Claude commands: ${env.hasClaudeCommands ? "yes" : "no"}`);
   console.log(`    Agreements:     ${env.hasAgreements ? "already installed" : "not found"}`);
@@ -114,13 +121,14 @@ export async function install(flags = []) {
     !skipBmad && (forceBmad || env.hasBmad);
 
   if (shouldInstallBmad) {
-    console.log("  [3/3] Installing BMAD integration...");
+    const bmadRoot = env.bmadDir;
+    console.log(`  [3/3] Installing BMAD integration (${bmadRoot}/)...`);
 
-    const bmadCustomizeDir = join(projectRoot, "_bmad", "_config", "agents");
-    const bmadMemoryDir = join(projectRoot, "_bmad", "_memory", "agreements-sidecar");
+    const bmadCustomizeDir = join(projectRoot, bmadRoot, "_config", "agents");
+    const bmadMemoryDir = join(projectRoot, bmadRoot, "_memory", "agreements-sidecar");
 
     if (!existsSync(bmadCustomizeDir)) {
-      console.log("    warn: _bmad/_config/agents/ not found, skipping customize.yaml");
+      console.log(`    warn: ${bmadRoot}/_config/agents/ not found, skipping customize.yaml`);
     } else {
       // Only write customize.yaml if it's still the default (empty) version
       for (const file of ["core-bmad-master.customize.yaml", "bmm-pm.customize.yaml"]) {
@@ -134,7 +142,7 @@ export async function install(flags = []) {
           }
         }
         copyTemplate(join(TEMPLATES, "bmad", file), destPath);
-        console.log(`    write _bmad/_config/agents/${file}`);
+        console.log(`    write ${bmadRoot}/_config/agents/${file}`);
       }
     }
 
@@ -145,7 +153,7 @@ export async function install(flags = []) {
       join(TEMPLATES, "bmad", "active-agreements.md"),
       join(bmadMemoryDir, "active-agreements.md")
     );
-    console.log("    write _bmad/_memory/agreements-sidecar/active-agreements.md");
+    console.log(`    write ${bmadRoot}/_memory/agreements-sidecar/active-agreements.md`);
   } else if (env.hasBmad && skipBmad) {
     console.log("  [3/3] BMAD integration skipped (--skip-bmad).");
   } else {

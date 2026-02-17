@@ -52,16 +52,22 @@ export function update(flags = []) {
   );
   console.log("    update .agreements/_templates/agreement.tpl.yaml");
 
-  // Update BMAD integration if present
-  const bmadCustomizeDir = join(projectRoot, "_bmad", "_config", "agents");
-  if (existsSync(bmadCustomizeDir)) {
-    console.log("  Updating BMAD integration...");
-    for (const file of ["core-bmad-master.customize.yaml", "bmm-pm.customize.yaml"]) {
-      copyTemplate(
-        join(TEMPLATES, "bmad", file),
-        join(bmadCustomizeDir, file)
-      );
-      console.log(`    update _bmad/_config/agents/${file}`);
+  // Update BMAD integration if present (_bmad or .bmad)
+  const bmadDir = existsSync(join(projectRoot, "_bmad")) ? "_bmad"
+    : existsSync(join(projectRoot, ".bmad")) ? ".bmad"
+    : null;
+
+  if (bmadDir) {
+    const bmadCustomizeDir = join(projectRoot, bmadDir, "_config", "agents");
+    if (existsSync(bmadCustomizeDir)) {
+      console.log(`  Updating BMAD integration (${bmadDir}/)...`);
+      for (const file of ["core-bmad-master.customize.yaml", "bmm-pm.customize.yaml"]) {
+        copyTemplate(
+          join(TEMPLATES, "bmad", file),
+          join(bmadCustomizeDir, file)
+        );
+        console.log(`    update ${bmadDir}/_config/agents/${file}`);
+      }
     }
   }
 
