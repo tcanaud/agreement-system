@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, appendFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createInterface } from "node:readline";
@@ -224,9 +224,14 @@ export async function install(flags = []) {
             console.log(`    skip ${file} (already has Agreement integration)`);
             continue;
           }
+          // File exists but without our content — append instead of overwrite
+          const snippet = readFileSync(join(TEMPLATES, "bmad", file), "utf-8");
+          appendFileSync(destPath, "\n" + snippet);
+          console.log(`    append ${bmadRoot}/_config/agents/${file}`);
+        } else {
+          copyTemplate(join(TEMPLATES, "bmad", file), destPath);
+          console.log(`    write ${bmadRoot}/_config/agents/${file}`);
         }
-        copyTemplate(join(TEMPLATES, "bmad", file), destPath);
-        console.log(`    write ${bmadRoot}/_config/agents/${file}`);
       }
     }
 
