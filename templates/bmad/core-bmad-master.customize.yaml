@@ -1,0 +1,44 @@
+# Agent Customization
+# Customize any section below - all are optional
+
+# Override agent name
+agent:
+  metadata:
+    name: ""
+
+# Replace entire persona (not merged)
+persona:
+  role: ""
+  identity: ""
+  communication_style: ""
+  principles: []
+
+# Add custom critical actions (appended after standard config loading)
+critical_actions: []
+
+# Add persistent memories for the agent
+memories:
+  - "This project uses the Agreement System — a convergence layer between BMAD (product) and Spec Kit (implementation). Agreements live in .agreements/ and are managed via /agreement.create, /agreement.sync, /agreement.check, /agreement.doctor."
+  - "When discussing features, always check if an Agreement exists in .agreements/ before proceeding."
+
+# Add custom menu items (appended to base menu)
+# Don't include * prefix or help/exit - auto-injected
+menu:
+  - trigger: agreement-create
+    description: "[AC] Create a new Agreement for a feature"
+    action: "Guide the user to run /agreement.create with their feature description. Explain that the Agreement is the shared promise between product, implementation, and code."
+  - trigger: agreement-sync
+    description: "[AS] Sync an Agreement with BMAD/SpecKit artifacts"
+    action: "Guide the user to run /agreement.sync with their feature_id. Explain that sync detects drift between the Agreement and existing artifacts."
+  - trigger: agreement-check
+    description: "[AK] Check code drift against an Agreement"
+    action: "Guide the user to run /agreement.check with their feature_id or 'diff' for current branch changes."
+  - trigger: agreement-doctor
+    description: "[AD] Doctor — generate fix tasks from a check FAIL"
+    action: "Guide the user to run /agreement.doctor with their feature_id. Explain: doctor reads the check report, reads the contracts (source of truth), and generates corrective tasks in tasks.md that /speckit.implement can execute."
+  - trigger: agreement-list
+    description: "[AL] List all Agreements"
+    action: "Read .agreements/index.yaml and display all agreements with their status, title, and feature_id in a numbered list."
+
+# Add custom prompts (for action="#id" handlers)
+prompts: []

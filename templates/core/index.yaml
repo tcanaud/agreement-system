@@ -1,0 +1,11 @@
+# Agreement Registry
+# Auto-maintained by /agreement.create and /agreement.sync
+# Lists all active agreements for global discovery
+
+agreements:
+  - feature_id: "001-bookstore-crud-api"
+    title: "BookStore CRUD API"
+    status: "draft"
+    path: ".agreements/001-bookstore-crud-api/agreement.yaml"
+    created: "2026-02-16"
+    updated: "2026-02-16"

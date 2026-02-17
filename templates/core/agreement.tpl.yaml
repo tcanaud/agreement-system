@@ -1,0 +1,63 @@
+# Agreement Template v1
+# Convention: one file per feature, one feature = one agreement = one promise
+# Feature ID follows Spec Kit convention: ###-feature-name
+
+agreement_version: "1.0"
+
+# ── Identity ──────────────────────────────────────────
+feature_id: "{{feature_id}}"
+title: "{{title}}"
+status: "draft" # draft | active | deprecated | superseded
+created: "{{date}}"
+updated: "{{date}}"
+owner: "{{owner}}"
+
+# ── Product Intent ────────────────────────────────────
+# Source: BMAD (PRD, stories) or user input
+# One paragraph max. What is the promise to the user?
+intent: |
+  {{intent}}
+
+user_outcomes:
+  - "{{outcome_1}}"
+
+acceptance_criteria:
+  - criterion: "{{criterion_1}}"
+    verifiable: true
+
+# ── Interfaces ────────────────────────────────────────
+# Source: Spec Kit (plan.md, contracts/) or code
+interfaces:
+  - type: "" # api | schema | event | cli | ui
+    path: "" # e.g. POST /api/v1/resource
+    contract: "" # short description of the contract
+
+# ── Non-Functional Constraints ────────────────────────
+constraints:
+  - type: "" # performance | security | accessibility | compatibility
+    description: ""
+
+# ── Breaking Change Policy ────────────────────────────
+breaking_changes:
+  policy: "agreement-first" # agreement MUST be updated before code
+  history: []
+  # - date: "YYYY-MM-DD"
+  #   description: ""
+  #   migration: ""
+
+# ── Traceability ──────────────────────────────────────
+# Each layer references the Agreement, not each other
+references:
+  bmad: [] # e.g. [".bmad_output/planning-artifacts/prd.md"]
+  speckit: [] # e.g. ["specs/###-feature-name/spec.md"]
+  code: [] # e.g. ["src/api/resource.ts"]
+
+# ── Drift Detection ──────────────────────────────────
+# Paths to monitor for changes that may impact this agreement
+watched_paths:
+  bmad: []
+  speckit: []
+  code: []
+
+checksums: {}
+# section_name: "sha256:..."

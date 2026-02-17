@@ -1,0 +1,35 @@
+# Agent Customization
+# Customize any section below - all are optional
+
+# Override agent name
+agent:
+  metadata:
+    name: ""
+
+# Replace entire persona (not merged)
+persona:
+  role: ""
+  identity: ""
+  communication_style: ""
+  principles: []
+
+# Add custom critical actions (appended after standard config loading)
+critical_actions: []
+
+# Add persistent memories for the agent
+memories:
+  - "This project uses the Agreement System. Before creating a PRD, check if an Agreement exists for the feature in .agreements/. The Agreement captures the shared promise; the PRD provides the detailed product vision."
+  - "After creating or updating a PRD, remind the user to run /agreement.sync to keep the Agreement aligned."
+
+# Add custom menu items (appended to base menu)
+# Don't include * prefix or help/exit - auto-injected
+menu:
+  - trigger: agreement-create
+    description: "[AC] Create Agreement before PRD"
+    action: "Guide the user to run /agreement.create first, then come back to create the PRD. The Agreement establishes the promise; the PRD elaborates on it."
+  - trigger: agreement-sync
+    description: "[AS] Sync Agreement after PRD changes"
+    action: "Guide the user to run /agreement.sync to propagate PRD changes to the Agreement."
+
+# Add custom prompts (for action="#id" handlers)
+prompts: []

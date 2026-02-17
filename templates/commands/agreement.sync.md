@@ -1,0 +1,152 @@
+---
+description: Synchronize an Agreement with existing BMAD and Spec Kit artifacts — detect drift and propose updates.
+handoffs:
+  - label: Check for code drift
+    agent: agreement.check
+    prompt: Check if the code has drifted from the agreement
+    send: true
+  - label: Create Agreement
+    agent: agreement.create
+    prompt: Create a new agreement
+---
+
+## User Input
+
+```text
+$ARGUMENTS
+```
+
+You **MUST** consider the user input before proceeding (if not empty).
+
+## Purpose
+
+Synchronize an existing Agreement with the current state of BMAD artifacts, Spec Kit artifacts, and code. Detect drift, qualify changes, and propose targeted updates to the Agreement.
+
+## Execution Flow
+
+### 1. Identify the target Agreement
+
+**If `$ARGUMENTS` specifies a feature_id** (e.g., "001-user-auth"):
+- Load `.agreements/{{feature_id}}/agreement.yaml`
+- If not found: ERROR "No Agreement found for {{feature_id}}. Use `/agreement.create` first."
+
+**If `$ARGUMENTS` is empty or "all":**
+- Load `.agreements/index.yaml`
+- List all agreements with status != "deprecated"
+- Ask user to pick one, or process all sequentially
+
+### 2. Load the current Agreement
+
+Read `.agreements/{{feature_id}}/agreement.yaml` and parse all sections.
+
+### 3. Scan BMAD artifacts
+
+a. Check paths listed in `references.bmad[]`
+b. Also scan `.bmad_output/planning-artifacts/` for any file mentioning the feature_id or title
+c. For each BMAD artifact found, extract:
+   - Product intent / vision statements
+   - User outcomes / goals
+   - Acceptance criteria
+   - Any breaking changes mentioned
+
+### 4. Scan Spec Kit artifacts
+
+a. Check paths listed in `references.speckit[]`
+b. Also scan `specs/{{feature_id}}/` for spec.md, plan.md, tasks.md, contracts/
+c. For each Spec Kit artifact found, extract:
+   - Interfaces (from plan.md and contracts/)
+   - Non-functional constraints
+   - Acceptance criteria (from spec.md)
+   - Implementation decisions that affect the promise
+
+### 5. Scan code (lightweight)
+
+a. Check paths listed in `watched_paths.code[]`
+b. If code paths exist, look for:
+   - API route definitions
+   - Schema/model definitions
+   - Event definitions
+   - Exported interfaces/types
+c. Do NOT perform deep code analysis — just surface-level interface detection
+
+### 6. Detect drift
+
+Compare current Agreement content against what was found in steps 3-5.
+
+Classify each difference:
+
+| Category | Severity | Description |
+|----------|----------|-------------|
+| **Intent drift** | HIGH | Product intent in BMAD differs from Agreement |
+| **Interface change** | HIGH | API/schema/event changed in code or Spec Kit |
+| **Criteria mismatch** | MEDIUM | Acceptance criteria differ between sources |
+| **New constraint** | MEDIUM | Constraint added in one layer but not Agreement |
+| **Reference stale** | LOW | Referenced file moved, renamed, or deleted |
+| **Coverage gap** | LOW | New artifact exists but isn't referenced |
+
+### 7. Present findings
+
+Display a drift report:
+
+```markdown
+## Drift Report: {{feature_id}}
+
+**Agreement status**: {{status}}
+**Last updated**: {{updated}}
+
+### Findings
+
+| # | Category | Severity | Source | Description |
+|---|----------|----------|--------|-------------|
+| 1 | Intent drift | HIGH | .bmad_output/prd.md | PRD says "X" but Agreement says "Y" |
+| 2 | Interface change | HIGH | specs/001/plan.md | New endpoint POST /api/v2/resource |
+| ... | ... | ... | ... | ... |
+
+### No drift detected in:
+- [list sections with no drift]
+```
+
+**If no drift detected**: Report "Agreement is in sync" and stop.
+
+### 8. Propose updates
+
+For each finding, propose a specific YAML change to the Agreement:
+
+```markdown
+### Proposed Update #1: Intent drift
+**Current**:
+intent: |
+  Old intent text
+
+**Proposed**:
+intent: |
+  Updated intent text reflecting PRD changes
+
+**Reason**: PRD updated on YYYY-MM-DD with new scope
+```
+
+### 9. Apply updates (with confirmation)
+
+- Present ALL proposed changes before applying any
+- Ask user: "Apply all / Select specific / Skip"
+- If user selects specific: present numbered list, accept comma-separated selection
+- Apply selected changes to `.agreements/{{feature_id}}/agreement.yaml`
+- Update the `updated` field to today's date
+- Update `.agreements/index.yaml` with new `updated` date
+
+### 10. Report
+
+```
+Sync complete: {{feature_id}}
+  Applied: N updates
+  Skipped: M updates
+  New status: {{status}}
+```
+
+## Rules
+
+- NEVER apply changes without user confirmation.
+- NEVER modify BMAD or Spec Kit artifacts — only the Agreement.
+- Keep the Agreement short — summarize, don't duplicate.
+- If drift is detected but ambiguous, ask the user to clarify intent.
+- Severity HIGH findings should be addressed before continuing development.

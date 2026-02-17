@@ -1,0 +1,19 @@
+# Agreement System — Project Configuration
+# Edit this file to customize the Agreement System for your project.
+
+# Version of the Agreement System installed
+version: "1.0.0"
+
+# Where Spec Kit artifacts live (relative to project root)
+speckit_specs_dir: "specs"
+
+# Where BMAD planning artifacts live (relative to project root)
+bmad_artifacts_dir: ".bmad_output/planning-artifacts"
+
+# Default owner for new agreements (used by /agreement.create)
+# Leave empty to auto-detect from _bmad/core/config.yaml or git config
+default_owner: ""
+
+# Breaking change policy applied to all new agreements
+# Options: "agreement-first" | "code-first" | "manual"
+breaking_change_policy: "agreement-first"
