@@ -24,6 +24,20 @@ Synchronize an existing Agreement with the current state of BMAD artifacts, Spec
 
 ## Execution Flow
 
+### 0. Load configuration
+
+Read `.agreements/config.yaml` and extract all paths:
+- `bmad_dir` — BMAD installation directory (or null)
+- `bmad_config` — BMAD config file path (or null)
+- `bmad_artifacts_dir` — BMAD planning artifacts directory (or null)
+- `speckit_dir` — Spec Kit installation directory (or null)
+- `speckit_specs_dir` — Spec Kit specs directory (default: "specs")
+- `default_owner` — Default owner for new agreements
+
+If `.agreements/config.yaml` does not exist, ERROR "Config not found. Run `npx agreement-system init` first."
+
+All subsequent steps use these config values instead of hardcoding paths.
+
 ### 1. Identify the target Agreement
 
 **If `$ARGUMENTS` specifies a feature_id** (e.g., "001-user-auth"):
@@ -42,7 +56,7 @@ Read `.agreements/{{feature_id}}/agreement.yaml` and parse all sections.
 ### 3. Scan BMAD artifacts
 
 a. Check paths listed in `references.bmad[]`
-b. Also scan the BMAD output folder (find via `_bmad/core/config.yaml` or `.bmad/core/config.yaml` → `output_folder`, default: `.bmad_output`) for planning artifacts mentioning the feature_id or title
+b. If `bmad_artifacts_dir` is not null, also scan `{{bmad_artifacts_dir}}/` for planning artifacts mentioning the feature_id or title
 c. For each BMAD artifact found, extract:
    - Product intent / vision statements
    - User outcomes / goals
@@ -52,7 +66,7 @@ c. For each BMAD artifact found, extract:
 ### 4. Scan Spec Kit artifacts
 
 a. Check paths listed in `references.speckit[]`
-b. Also scan `specs/{{feature_id}}/` for spec.md, plan.md, tasks.md, contracts/
+b. Also scan `{{speckit_specs_dir}}/{{feature_id}}/` for spec.md, plan.md, tasks.md, contracts/
 c. For each Spec Kit artifact found, extract:
    - Interfaces (from plan.md and contracts/)
    - Non-functional constraints

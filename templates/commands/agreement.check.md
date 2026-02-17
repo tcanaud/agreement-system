@@ -28,6 +28,17 @@ Analyze the current codebase (or a specific diff) against one or more Agreements
 
 ## Execution Flow
 
+### 0. Load configuration
+
+Read `.agreements/config.yaml` and extract all paths:
+- `bmad_dir` — BMAD installation directory (or null)
+- `bmad_artifacts_dir` — BMAD planning artifacts directory (or null)
+- `speckit_specs_dir` — Spec Kit specs directory (default: "specs")
+
+If `.agreements/config.yaml` does not exist, ERROR "Config not found. Run `npx agreement-system init` first."
+
+All subsequent steps use these config values instead of hardcoding paths.
+
 ### 1. Determine scope
 
 **If `$ARGUMENTS` contains a feature_id:**

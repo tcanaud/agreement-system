@@ -27,6 +27,21 @@ Create a new Agreement — a lightweight, versioned artifact that represents a s
 
 ## Execution Flow
 
+### 0. Load configuration
+
+Read `.agreements/config.yaml` and extract all paths:
+- `bmad_dir` — BMAD installation directory (or null)
+- `bmad_config` — BMAD config file path (or null)
+- `bmad_artifacts_dir` — BMAD planning artifacts directory (or null)
+- `speckit_dir` — Spec Kit installation directory (or null)
+- `speckit_specs_dir` — Spec Kit specs directory (default: "specs")
+- `default_owner` — Default owner for new agreements
+- `breaking_change_policy` — Breaking change policy
+
+If `.agreements/config.yaml` does not exist, ERROR "Config not found. Run `npx agreement-system init` first."
+
+All subsequent steps use these config values instead of hardcoding paths.
+
 ### 1. Determine feature identity
 
 **If `$ARGUMENTS` contains a feature description (new feature):**
@@ -36,7 +51,7 @@ a. Generate a concise short name (2-4 words, kebab-case) from the description.
 b. Find the next available feature number by checking all three sources:
    - Remote branches: `git ls-remote --heads origin | grep -E 'refs/heads/[0-9]+'`
    - Local branches: `git branch | grep -E '^[* ]*[0-9]+'`
-   - Specs directories: check `specs/` for existing `###-*` directories
+   - Specs directories: check `{{speckit_specs_dir}}/` for existing `###-*` directories
    - Agreements directories: check `.agreements/` for existing `###-*` directories
 
 c. Use the highest number found + 1. If none found, start at 001.
@@ -54,8 +69,8 @@ b. Check if an Agreement already exists at `.agreements/{{feature_id}}/agreement
 
 Scan for existing BMAD and Spec Kit artifacts related to this feature:
 
-- **BMAD**: Find the BMAD output folder by reading `_bmad/core/config.yaml` or `.bmad/core/config.yaml` → `output_folder` (default: `.bmad_output`). Check `{{output_folder}}/planning-artifacts/` for PRD, architecture, stories that mention the feature.
-- **Spec Kit**: Check `specs/{{feature_id}}/` for spec.md, plan.md, tasks.md
+- **BMAD**: If `bmad_artifacts_dir` is not null, check `{{bmad_artifacts_dir}}/` for PRD, architecture, stories that mention the feature.
+- **Spec Kit**: Check `{{speckit_specs_dir}}/{{feature_id}}/` for spec.md, plan.md, tasks.md
 - Report what was found (may be nothing — that's fine)
 
 ### 3. Create the Agreement
@@ -67,7 +82,7 @@ b. Fill in the identity section:
    - `title`: from user description or extracted from existing artifacts
    - `status`: "draft"
    - `created` / `updated`: today's date (YYYY-MM-DD)
-   - `owner`: from BMAD config (`_bmad/core/config.yaml` or `.bmad/core/config.yaml`) → `user_name`. If no BMAD, use `git config user.name`. If neither, ask.
+   - `owner`: use `default_owner` from config. If empty, use `git config user.name`. If neither, ask.
 
 c. Fill in the product intent:
 
