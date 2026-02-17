@@ -16,6 +16,10 @@
   ],
   "author": "Thibaud Canaud",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tcanaud/agreement-system.git"
+  },
   "files": [
     "bin/",
     "src/",
