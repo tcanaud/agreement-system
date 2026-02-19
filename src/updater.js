@@ -1,6 +1,7 @@
 import { existsSync, copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { mergeYAML } from "../../tcsetup/src/yaml-merge.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES = join(__dirname, "..", "templates");
@@ -67,27 +68,15 @@ export function update(flags = []) {
         if (existsSync(destPath)) {
           const existing = readFileSync(destPath, "utf-8");
           const snippet = readFileSync(srcPath, "utf-8");
-          // Find our marker to replace only our section
-          const marker = "# Agent Customization";
-          const markerIndex = existing.indexOf(marker);
-          if (markerIndex >= 0) {
-            // Our content starts at marker — find where it ends (next system's marker or EOF)
-            const nextMarker = existing.indexOf("\n# ", markerIndex + marker.length);
-            if (nextMarker >= 0) {
-              // Other system content follows — replace only our portion
-              const after = existing.substring(nextMarker);
-              writeFileSync(destPath, snippet.trimEnd() + "\n" + after);
-            } else {
-              // We're the only content, or we're at the end
-              writeFileSync(destPath, snippet);
-            }
-            console.log(`    update ${bmadDir}/_config/agents/${file} (replaced section)`);
-          } else if (!existing.includes("agreement")) {
-            // Our content not present — append
-            writeFileSync(destPath, existing.trimEnd() + "\n\n" + snippet);
-            console.log(`    append ${bmadDir}/_config/agents/${file}`);
+
+          // Use intelligent YAML merge instead of text-based append
+          const mergeResult = mergeYAML(existing, snippet);
+
+          if (mergeResult.success) {
+            writeFileSync(destPath, mergeResult.toYAML());
+            console.log(`    update ${bmadDir}/_config/agents/${file} (merged configuration)`);
           } else {
-            console.log(`    skip ${bmadDir}/_config/agents/${file} (up to date)`);
+            console.error(`    Error merging ${file}: ${mergeResult.errors.join(", ")}`);
           }
         } else {
           copyTemplate(srcPath, destPath);
